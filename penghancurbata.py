@@ -110,6 +110,7 @@ class Game(tk.Frame):
         super(Game, self).__init__(master)
         self.lives = 3
         self.score = 0
+        self.level = 1  # <--- TAHAP 5: Variabel Level Game
         self.width = 610
         self.height = 400
         self.canvas = tk.Canvas(self, bg='#1e1e2f',
@@ -123,21 +124,26 @@ class Game(tk.Frame):
         self.ball = None
         self.paddle = Paddle(self.canvas, self.width / 2, 326)
         self.items[self.paddle.item] = self.paddle
-        for x in range(5, self.width - 5, 75):
-            self.add_brick(x + 37.5, 50, 3)
-            self.add_brick(x + 37.5, 70, 2)
-            self.add_brick(x + 37.5, 90, 1)
+        self.create_bricks()
 
         self.hud_score = None
         self.hud_lives = None
+        self.hud_level = None  # <--- TAHAP 5
         
         self.setup_game()
         self.canvas.focus_set()
         
+        # Kontrol Panah & A/D
         self.canvas.bind('<Left>', lambda _: self.paddle.move(-12))
         self.canvas.bind('<Right>', lambda _: self.paddle.move(12))
         self.canvas.bind('a', lambda _: self.paddle.move(-12))
         self.canvas.bind('d', lambda _: self.paddle.move(12))
+
+    def create_bricks(self):
+        for x in range(5, self.width - 5, 75):
+            self.add_brick(x + 37.5, 50, 3)
+            self.add_brick(x + 37.5, 70, 2)
+            self.add_brick(x + 37.5, 90, 1)
 
     def setup_game(self):
         self.add_ball()
@@ -151,6 +157,7 @@ class Game(tk.Frame):
         paddle_coords = self.paddle.get_position()
         x = (paddle_coords[0] + paddle_coords[2]) * 0.5
         self.ball = Ball(self.canvas, x, 310)
+        self.ball.speed = 9 + (self.level - 1) * 2  # <--- TAHAP 5: Bola makin cepat tiap level naik
         self.paddle.set_ball(self.ball)
 
     def add_brick(self, x, y, hits):
@@ -164,6 +171,75 @@ class Game(tk.Frame):
     def update_hud(self):
         score_text = f'Score: {self.score}'
         lives_text = f'Lives: {self.lives}'
+        level_text = f'Level: {self.level}'  # <--- TAHAP 5
         
         if self.hud_score is None:
-            self.hud_score = self.draw_text(
+            self.hud_score = self.draw_text(60, 20, score_text, 12, '#ffffff')
+            self.hud_level = self.draw_text(self.width / 2, 20, level_text, 12, '#ffa502')
+            self.hud_lives = self.draw_text(self.width - 60, 20, lives_text, 12, '#ffffff')
+        else:
+            self.canvas.itemconfig(self.hud_score, text=score_text)
+            self.canvas.itemconfig(self.hud_level, text=level_text)
+            self.canvas.itemconfig(self.hud_lives, text=lives_text)
+
+    def start_game(self):
+        self.canvas.unbind('<space>')
+        self.canvas.delete(self.text)
+        self.paddle.ball = None
+        self.game_loop()
+
+    def game_loop(self):
+        self.check_collisions()
+        num_bricks = len(self.canvas.find_withtag('brick'))
+        
+        # TAHAP 5: Logika Naik Level jika semua brick habis
+        if num_bricks == 0:
+            self.ball.speed = 0
+            self.level += 1
+            self.score += 200  # Bonus clear level
+            self.draw_text(300, 200, f'LEVEL {self.level} START!', 30, '#2ed573')
+            self.after(2000, self.next_level)
+            
+        elif self.ball.get_position()[3] >= self.height:
+            self.ball.speed = 0
+            self.lives -= 1
+            if self.lives < 0:
+                self.draw_text(300, 200, 'Game Over!', 40, '#ff4757')
+            else:
+                self.after(1000, self.setup_game)
+        else:
+            self.ball.update()
+            self.after(40, self.game_loop)
+
+    def next_level(self):  # <--- TAHAP 5: Reset arena untuk level berikutnya
+        self.canvas.delete('all')
+        self.items = {}
+        self.paddle = Paddle(self.canvas, self.width / 2, 326)
+        self.items[self.paddle.item] = self.paddle
+        self.create_bricks()
+        self.hud_score = None
+        self.hud_lives = None
+        self.hud_level = None
+        self.setup_game()
+
+    def check_collisions(self):
+        ball_coords = self.ball.get_position()
+        if not ball_coords:
+            return
+        items = self.canvas.find_overlapping(*ball_coords)
+        objects = [self.items[x] for x in items if x in self.items]
+        
+        for obj in objects:
+            if isinstance(obj, Brick):
+                self.score += 10
+                
+        self.ball.clone = objects
+        self.ball.collide(objects)
+        self.update_hud()
+
+
+if __name__ == '__main__':
+    root = tk.Tk()
+    root.title('Modified Brick Breaker - Arcade')
+    game = Game(root)
+    game.mainloop()
