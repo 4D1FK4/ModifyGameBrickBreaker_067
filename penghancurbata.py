@@ -109,6 +109,7 @@ class Game(tk.Frame):
     def __init__(self, master):
         super(Game, self).__init__(master)
         self.lives = 3
+        self.score = 0
         self.width = 610
         self.height = 400
         self.canvas = tk.Canvas(self, bg='#1e1e2f',
@@ -127,11 +128,12 @@ class Game(tk.Frame):
             self.add_brick(x + 37.5, 70, 2)
             self.add_brick(x + 37.5, 90, 1)
 
-        self.hud = None
+        self.hud_score = None
+        self.hud_lives = None
+        
         self.setup_game()
         self.canvas.focus_set()
         
-        # Kontrol Panah & A/D
         self.canvas.bind('<Left>', lambda _: self.paddle.move(-12))
         self.canvas.bind('<Right>', lambda _: self.paddle.move(12))
         self.canvas.bind('a', lambda _: self.paddle.move(-12))
@@ -139,7 +141,7 @@ class Game(tk.Frame):
 
     def setup_game(self):
         self.add_ball()
-        self.update_lives_text()
+        self.update_hud()
         self.text = self.draw_text(300, 200, 'Press Space to start', 25, '#00ffcc')
         self.canvas.bind('<space>', lambda _: self.start_game())
 
@@ -157,4 +159,11 @@ class Game(tk.Frame):
 
     def draw_text(self, x, y, text, size=40, color='white'):
         font = ('Helvetica', size, 'bold')
-        return self.canvas.create_
+        return self.canvas.create_text(x, y, text=text, font=font, fill=color)
+
+    def update_hud(self):
+        score_text = f'Score: {self.score}'
+        lives_text = f'Lives: {self.lives}'
+        
+        if self.hud_score is None:
+            self.hud_score = self.draw_text(
