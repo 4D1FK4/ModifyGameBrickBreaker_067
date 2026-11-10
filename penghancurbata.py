@@ -135,7 +135,7 @@ class Game(tk.Frame):
     def setup_game(self):
         self.add_ball()
         self.update_lives_text()
-        self.text = self.draw_text(300, 200, 'Press Space to start', 30)
+        self.text = self.draw_text(300, 200, 'Press Space to start')
         self.canvas.bind('<space>', lambda _: self.start_game())
 
     def add_ball(self):
@@ -151,8 +151,8 @@ class Game(tk.Frame):
         self.items[brick.item] = brick
 
     def draw_text(self, x, y, text, size=40):
-        font = ('Arial', size, 'bold')
-        return self.canvas.create_text(x, y, text=text, font=font, fill='white')
+        font = ('Arial', size)
+        return self.canvas.create_text(x, y, text=text, font=font)
 
     def update_lives_text(self):
         text = 'Lives: %s' % self.lives
@@ -172,12 +172,12 @@ class Game(tk.Frame):
         num_bricks = len(self.canvas.find_withtag('brick'))
         if num_bricks == 0:
             self.ball.speed = 0
-            self.draw_text(300, 200, 'You win!', 40)
+            self.draw_text(300, 200, 'You win!')
         elif self.ball.get_position()[3] >= self.height:
             self.ball.speed = 0
             self.lives -= 1
             if self.lives < 0:
-                self.draw_text(300, 200, 'Game Over!', 40)
+                self.draw_text(300, 200, 'You Lose!!! Game Over!')
             else:
                 self.after(1000, self.setup_game)
         else:
@@ -190,12 +190,11 @@ class Game(tk.Frame):
             return
         items = self.canvas.find_overlapping(*ball_coords)
         objects = [self.items[x] for x in items if x in self.items]
-        self.ball.clone = objects # aman
         self.ball.collide(objects)
 
 
 if __name__ == '__main__':
     root = tk.Tk()
-    root.title('Ping Pong / Breakout Game')
+    root.title('Hello, Jarvis!')
     game = Game(root)
     game.mainloop()
