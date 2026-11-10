@@ -21,7 +21,6 @@ class Ball(GameObject):
         self.radius = 10
         self.direction = [1, -1]
         self.speed = 10
-        # MODIFIKASI TAHAP 2: Warna bola jadi neon cyan
         item = canvas.create_oval(x - self.radius, y - self.radius,
                                   x + self.radius, y + self.radius,
                                   fill='#00ffcc', outline='#ffffff')
@@ -63,7 +62,6 @@ class Paddle(GameObject):
         self.width = 90
         self.height = 10
         self.ball = None
-        # MODIFIKASI TAHAP 2: Warna paddle jadi pink terang
         item = canvas.create_rectangle(x - self.width / 2,
                                        y - self.height / 2,
                                        x + self.width / 2,
@@ -84,7 +82,6 @@ class Paddle(GameObject):
 
 
 class Brick(GameObject):
-    # MODIFIKASI TAHAP 2: Palet warna brick yang lebih modern
     COLORS = {1: '#ff4757', 2: '#2ed573', 3: '#ffa502'}
 
     def __init__(self, canvas, x, y, hits):
@@ -114,7 +111,6 @@ class Game(tk.Frame):
         self.lives = 3
         self.width = 610
         self.height = 400
-        # MODIFIKASI TAHAP 2: Background Canvas jadi Dark Mode (#1e1e2f)
         self.canvas = tk.Canvas(self, bg='#1e1e2f',
                                 width=self.width,
                                 height=self.height,
@@ -134,8 +130,12 @@ class Game(tk.Frame):
         self.hud = None
         self.setup_game()
         self.canvas.focus_set()
-        self.canvas.bind('<Left>', lambda _: self.paddle.move(-10))
-        self.canvas.bind('<Right>', lambda _: self.paddle.move(10))
+        
+        # Kontrol Panah & A/D
+        self.canvas.bind('<Left>', lambda _: self.paddle.move(-12))
+        self.canvas.bind('<Right>', lambda _: self.paddle.move(12))
+        self.canvas.bind('a', lambda _: self.paddle.move(-12))
+        self.canvas.bind('d', lambda _: self.paddle.move(12))
 
     def setup_game(self):
         self.add_ball()
@@ -144,4 +144,17 @@ class Game(tk.Frame):
         self.canvas.bind('<space>', lambda _: self.start_game())
 
     def add_ball(self):
-        if self.ball is not
+        if self.ball is not None:
+            self.ball.delete()
+        paddle_coords = self.paddle.get_position()
+        x = (paddle_coords[0] + paddle_coords[2]) * 0.5
+        self.ball = Ball(self.canvas, x, 310)
+        self.paddle.set_ball(self.ball)
+
+    def add_brick(self, x, y, hits):
+        brick = Brick(self.canvas, x, y, hits)
+        self.items[brick.item] = brick
+
+    def draw_text(self, x, y, text, size=40, color='white'):
+        font = ('Helvetica', size, 'bold')
+        return self.canvas.create_
